@@ -7,8 +7,10 @@
  * };
  */
 var aqiData = {};
-var CERegex = /^[a-zA-Z\u4E00-\u9FA5]+$/,numericRegex = /^[0-9]+$/;
+var CERegex = /^[a-zA-Z\u4E00-\u9FA5]+$/
+    ,numericRegex = /^[0-9]+$/;
 
+/* 兼容版事件绑定函数 */
 function addEvent(event, element, func) {
     if (element.addEventListener)  // W3C DOM
         element.addEventListener(event, func);
@@ -18,41 +20,30 @@ function addEvent(event, element, func) {
     else { // No much to do
         element[event] = func;
     }
-};
-// Speed up calls to hasOwnProperty
-var hasOwnProperty = Object.prototype.hasOwnProperty;
+}
 
+/* 判断对象是否为空 */
 function isEmpty(obj) {
-
-    // null and undefined are "empty"
+    // null 或者 undefined
     if (obj == null) return true;
-
-    // Assume if it has a length property with a non-zero value
-    // that that property is correct.
+    // 若有length属性
     if (obj.length > 0)    return false;
     if (obj.length === 0)  return true;
-
-    // Otherwise, does it have any properties of its own?
-    // Note that this doesn't handle
-    // toString and valueOf enumeration bugs in IE < 9
+    // 其他情况
     for (var key in obj) {
-        if (hasOwnProperty.call(obj, key)) return false;
+        if (Object.prototype.hasOwnProperty.call(obj, key)) return false;
     }
-
     return true;
 }
+
+/* 输入验证 */
 function validate(re, id){
-    // Check input
     if(re.test(document.getElementById(id).value.trim())){
-        // Style green
         document.getElementById(id).style.background ='#ccffcc';
-        // Hide error prompt
         document.getElementById(id + 'Error').style.display = "none";
         return true;
     }else{
-        // Style red
         document.getElementById(id).style.background ='#e35152';
-        // Show error prompt
         document.getElementById(id + 'Error').style.display = "block";
         return false;
     }
@@ -63,7 +54,6 @@ function validate(re, id){
  * 然后渲染aqi-list列表，增加新增的数据
  */
 function addAqiData() {
-
     var error = 0;
     var city=document.getElementById('aqi-city-input').value.trim();
     var value=document.getElementById('aqi-value-input').value.trim();
@@ -71,13 +61,11 @@ function addAqiData() {
         document.getElementById('aqi-city-inputError').style.display = "block";
         error++;
     }
-
     if(!validate(numericRegex,'aqi-value-input')){
         document.getElementById('aqi-value-inputError').style.display = "block";
         error++;
     }
-
-    error>0?aqiData={}:aqiData[city]=value;
+    if(error==0){aqiData[city]=value;}
 }
 
 /**
@@ -91,7 +79,7 @@ function renderAqiList() {
             tbody+="<tr><td>"+city+"</td><td>"+aqiData[city]+"</td><td><button id='"+city+"'>删除</button></td></tr>";
         }
     }
-    document.getElementById("aqi-table").innerHTML+=tbody;
+    document.getElementById("aqi-table").innerHTML=tbody;
 }
 
 /**
@@ -115,16 +103,14 @@ function delBtnHandle(city) {
 
 function init() {
     var addBtn=document.getElementById("add-btn");
-    var deleteBtn=document.querySelectorAll("#aqi-table button");
+    var table=document.getElementById("aqi-table");
     // 在这下面给add-btn绑定一个点击事件，点击时触发addBtnHandle函数
     addEvent("click", addBtn, addBtnHandle);
     // 想办法给aqi-table中的所有删除按钮绑定事件，触发delBtnHandle函数
-    for(var btn in deleteBtn){
-        addEvent("click", deleteBtn[btn], function(e){
-            delBtnHandle(this.id);
-            e.stopPropagation?e.stopPropagation():e.cancelBubble=true;
-        })
-    }
+    addEvent("click", table, function(e){
+        var target = e.target || e.srcElement;
+        if(target.nodeName.toLowerCase()==="button"){delBtnHandle(target.id);}
+    });
 }
 
 init();
